@@ -40,6 +40,7 @@
       definitionsID: [],
       value: [],
       count: 1,
+      lastStatus:[],
       lastResult: [],
       authen:{
         username: 'thaihoang.nguyen@ezitsol.com',
@@ -50,25 +51,7 @@
       openLink: (url) => {
         console.log('URL: ' + url)
         shell.openExternal(url)
-      },
-      getLasBuildStatus: (buildDefinitionId) => {
-        results: []
-        axios.get(`https://acomsolutions.visualstudio.com/DefaultCollection/AutoTestManagement_Tool/_apis/build/builds?api-version=2.0&definitions=${buildDefinitionId}&$top=1`, {
-          auth: {
-            username: 'thaihoang.nguyen@ezitsol.com',
-            password: '1Rivaldo@'
-          }
-          })
-          .then((response) => {
-            // this.results.push("AAAAAAAAAAAa")
-            console.log("status: " + response.data.value[0] && response.data.value[0].result ? response.data.value[0].result : "failed")
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-        }
-      },
-    computed: {
+      }
     },
     created() {
       const vm = this
@@ -82,14 +65,44 @@
         console.log(response.data.count)
         vm.count = response.data.count
         vm.value = response.data.value
-        console.log("AA" + vm.value.length);
-        vm.value.forEach((currentValue, index, arr)=> {
-          setTimeout(()=>{
-            console.log("AAAAAAAAAAAAAA:" + currentValue.id);
-            this.getLasBuildStatus(currentValue.id)
-          }, 2000)
-          
-        })
+        console.log("Number of value object: " + vm.value.length);
+        var index = 0;
+        loop();
+        function loop() {
+          if (index == vm.value.length) return;
+          var id_temp = vm.value[index].id
+          this.lastStatus.push('sdfsdf');
+          axios.get(`https://acomsolutions.visualstudio.com/DefaultCollection/AutoTestManagement_Tool/_apis/build/builds?api-version=2.0&definitions=${id_temp}&$top=1`, {
+            auth: {
+              username: 'thaihoang.nguyen@ezitsol.com',
+              password: '1Rivaldo@'
+            }
+            })
+            .then((response) => {
+                if (response.data.value && response.data.value[0]) {
+                    lastStatus.push(response.data.value[0].status);
+                    if(response.data.value[0].result){
+                        console.log(id_temp + '-' + response.data.value[0].result);
+                        this.lastResult.push(response.data.value[0].result);
+                    }else{
+                        console.log(id_temp + '-' + response.data.value[0].status)
+                        this.lastResult.push(response.data.value[0].status);
+                    }
+                }else{
+                    console.log(id_temp + '-' + 'not found any build')
+                    this.lastStatus.push('')
+                    this.lastResult.push('');
+
+                }
+            //   console.log("status: " + response.value[0] && response.value[0].result ? response.value[0].result : "notfound")
+            //   responses.push(response.result)
+                index++;
+                loop();
+            })
+            .catch((error) => {
+                console.log('Error' + error)
+            })
+        }
         // for(var i=0; i <= vm.value.length; i++){
         //   console.log("Value child:" + vm.value[i].id);
         //   this.getLasBuildStatus(vm.value[i].id)
